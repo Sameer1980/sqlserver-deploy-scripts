@@ -81,7 +81,7 @@ IF OBJECT_ID('dbo.usp_GetEmployees', 'P') IS NOT NULL
     DROP PROCEDURE dbo.usp_GetEmployees;
 GO
 
-CREATE PROCEDURE dbo.usp_GetEmployees
+CREATE PROCEDURE dbo.usp_GetEmployee
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -91,5 +91,6 @@ BEGIN
     ORDER BY EmployeeID;
 END
 GO
+
 
 
