@@ -1,70 +1,32 @@
-name: Install New SQL Server Database
+name: Deploy SQL Script to SQL Server
 
 on:
-  workflow_dispatch:  # Trigger manually from GitHub Actions tab
   push:
     branches:
-      - main  # Optional: run automatically on main branch pushes
+      - main # Trigger on pushes to the main branch
 
 jobs:
-  install-db:
-    runs-on: windows-latest
+  deploy:
+    runs-on: windows-latest # Use a Windows-based runner
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Install SQLCMD utility (if not present)
-        shell: pwsh
-        run: |
-          if (-not (Get-Command sqlcmd -ErrorAction SilentlyContinue)) {
-            Write-Host "Installing SQLCMD..."
-            Invoke-WebRequest -Uri "https://aka.ms/sqlcmd-win" -OutFile "sqlcmd.msi"
-            Start-Process msiexec.exe -Wait -ArgumentList '/I sqlcmd.msi /quiet /qn /norestart'
-          } else {
-            Write-Host "SQLCMD already installed."
-          }
+    - name: Set up SQLCMD (or other SQL client)
+      # This step assumes SQLCMD is available on the runner, or you can install it.
+      # For example, using a setup-ms-sql-client action if available, or a custom script.
+      # Example for installing SQLCMD if not present:
+      # run: |
+      #   choco install sqlcmd
 
-      - name: Create new database if not exists
-        shell: pwsh
-        env:
-          DB_SERVER: ${{ secrets.LIN-5CG3083JMK }}
-          DB_NAME: ${{ secrets.SampleDB }}
-          DB_USER: ${{ secrets.test_user }}
-          DB_PASSWORD: ${{ secrets.test }}
-        run: |
-          Write-Host "Checking if database [$env:DB_NAME] exists on [$env:DB_SERVER]..."
-          $query = @"
-          IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'$env:DB_NAME')
-          BEGIN
-            PRINT 'Database does not exist. Creating...';
-            CREATE DATABASE [$env:DB_NAME];
-          END
-          ELSE
-          BEGIN
-            PRINT 'Database already exists. Skipping creation.';
-          END
-          "@
-          sqlcmd -S $env:DB_SERVER -U $env:DB_USER -P $env:DB_PASSWORD
-
-      - name: Deploy schema scripts
-        shell: pwsh
-        env:
-          DB_SERVER: ${{ secrets.LIN-5CG3083JMK }}
-          DB_NAME: ${{ secrets.SampleDB }}
-          DB_USER: ${{ secrets.test_user }}
-          DB_PASSWORD: ${{ secrets.test }}
-        run: |
-          Write-Host "Deploying schema scripts to [$env:DB_NAME]..."
-          sqlcmd -S $env:DB_SERVER -d $env:DB_NAME -U $env:DB_USER -P $env:DB_PASSWORD -i "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql"
-
-      - name: Seed initial data
-        shell: pwsh
-        env:
-          DB_SERVER: ${{ secrets.LIN-5CG3083JMK }}
-          DB_NAME: ${{ secrets.SampleDB }}
-          DB_USER: ${{ secrets.test_user }}
-          DB_PASSWORD: ${{ secrets.test }}
-        run: |
-          Write-Host "Seeding data into [$env:DB_NAME]..."
-          sqlcmd -S $env:DB_SERVER -d $env:DB_NAME -U $env:DB_USER -P $env:DB_PASSWORD -i "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql"
+    - name: Deploy SQL script
+      env:
+        SQL_SERVER: ${{ secrets.LIN-5CG3083JMK }} # Hostname or IP of SQL Server
+        SQL_USERNAME: ${{ secrets.test_user }} # Username for SQL Server authentication
+        SQL_PASSWORD: ${{ secrets.test }} # Password for SQL Server authentication
+      run: |
+        # Use sqlcmd to execute the SQL script
+        # Replace 'your_script.sql' with the actual path to your SQL script
+        sqlcmd -S "$env:SQL_SERVER" -U "$env:SQL_USERNAME" -P "$env:SQL_PASSWORD" -i "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql"
+      shell: powershell # Specify PowerShell for Windows commands
