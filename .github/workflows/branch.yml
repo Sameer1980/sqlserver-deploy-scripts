@@ -1,0 +1,32 @@
+name: Deploy SQL Script to SQL Server
+
+on:
+  push:
+    branches:
+      - main # Trigger on pushes to the main branch
+
+jobs:
+  deploy:
+    runs-on: windows-latest # Use a Windows-based runner
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up SQLCMD (or other SQL client)
+      # This step assumes SQLCMD is available on the runner, or you can install it.
+      # For example, using a setup-ms-sql-client action if available, or a custom script.
+      # Example for installing SQLCMD if not present:
+      # run: |
+      #   choco install sqlcmd
+
+    - name: Deploy SQL script
+      env:
+        SQL_SERVER: ${{ secrets.LIN-5CG3083JMK }} # Hostname or IP of SQL Server
+        SQL_USERNAME: ${{ secrets.test_user }} # Username for SQL Server authentication
+        SQL_PASSWORD: ${{ secrets.test }} # Password for SQL Server authentication
+      run: |
+        # Use sqlcmd to execute the SQL script
+        # Replace 'your_script.sql' with the actual path to your SQL script
+        sqlcmd -S "$env:SQL_SERVER" -U "$env:SQL_USERNAME" -P "$env:SQL_PASSWORD" -i "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql"
+      shell: powershell # Specify PowerShell for Windows commands
