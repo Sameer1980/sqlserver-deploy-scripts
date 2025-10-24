@@ -19,7 +19,7 @@ jobs:
           # --- CONFIGURATION ---
           $server = "LIN-5CG3083JMK"  # e.g. "localhost\\SQLEXPRESS"
           $database = "SampleDB"
-          $scriptsPath = "scripts"
+          $scriptsPath = "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql"
 
           # --- STEP 1: Create database if not exists ---
           Write-Host "Ensuring database exists..."
