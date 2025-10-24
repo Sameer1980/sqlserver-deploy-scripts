@@ -1,0 +1,35 @@
+name: Deploy SQL Script
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  deploy-sql:
+    name: Deploy SQL Script to Database
+    runs-on: windows-latest
+
+    env:
+      DB_SERVER: ${{ secrets.LIN-5CG3083JMK }}
+      DB_NAME: ${{ secrets.SampleDB }}
+      DB_USER: ${{ secrets.test_user }}
+      DB_PASSWORD: ${{ secrets.test }}
+      SQL_FILE: C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install SQLCMD
+        shell: pwsh
+        run: |
+          choco install sqlcmd -y
+          sqlcmd -?  # Verify installation
+
+      - name: Run SQL script
+        shell: pwsh
+        run: |
+          Write-Host "Running SQL script on $env:DB_SERVER..."
+          sqlcmd -S $env:DB_SERVER -d $env:DB_NAME -U $env:DB_USER -P $env:DB_PASSWORD -i $env:SQL_FILE
