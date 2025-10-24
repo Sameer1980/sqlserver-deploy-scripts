@@ -45,7 +45,7 @@ jobs:
             PRINT 'Database already exists. Skipping creation.';
           END
           "@
-          sqlcmd -S $env:DB_SERVER -U $env:DB_USER -P $env:DB_PASSWORD -Q "$query"
+          sqlcmd -S $env:DB_SERVER -U $env:DB_USER -P $env:DB_PASSWORD
 
       - name: Deploy schema scripts
         shell: pwsh
