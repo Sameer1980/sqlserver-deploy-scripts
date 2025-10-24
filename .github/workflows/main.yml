@@ -1,0 +1,35 @@
+name: Deploy SQL Scripts to SQL Server (Windows Auth)
+
+on:
+  push:
+    branches:
+      - main  # Trigger deployment on pushes to main
+
+jobs:
+  deploy:
+    runs-on: windows-latest  # Use a Windows runner for Windows Auth
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy SQL Scripts
+        shell: pwsh
+        run: |
+          # --- CONFIGURATION ---
+          $server = "LIN-5CG3083JMK"  # e.g. "localhost\\SQLEXPRESS"
+          $database = "SampleDB"
+          $scriptsPath = "scripts"
+
+          # --- STEP 1: Create database if not exists ---
+          Write-Host "Ensuring database exists..."
+          sqlcmd -S $server -d master -E -Q "IF DB_ID(N'$SampleDB') IS NULL CREATE DATABASE [$SampleDB];"
+
+          # --- STEP 2: Run each SQL script in order ---
+          Write-Host "Running SQL scripts..."
+          Get-ChildItem "$scriptsPath" -Filter *.sql | Sort-Object Name | ForEach-Object {
+            Write-Host "Executing script: $($Deploy_SampleData.sql)"
+            sqlcmd -S $LIN-5CG3083JMK -d $SampleDB -E -i $C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql
+          }
+
+          Write-Host "Deployment completed successfully."
