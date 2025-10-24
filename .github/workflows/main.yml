@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: sqlserver-deploy-scripts
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install SQLCMD utility (if not present)
