@@ -1,35 +1,70 @@
-name: Deploy SQL Scripts to SQL Server (Windows Auth)
+name: Install New SQL Server Database
 
 on:
+  workflow_dispatch:  # Trigger manually from GitHub Actions tab
   push:
     branches:
-      - main  # Trigger deployment on pushes to main
+      - main  # Optional: run automatically on main branch pushes
 
 jobs:
-  deploy:
-    runs-on: windows-latest  # Use a Windows runner for Windows Auth
+  install-db:
+    runs-on: windows-latest
 
     steps:
-      - name: Checkout Repository
+      - name: sqlserver-deploy-scripts
         uses: actions/checkout@v4
 
-      - name: Deploy SQL Scripts
+      - name: Install SQLCMD utility (if not present)
         shell: pwsh
         run: |
-          # --- CONFIGURATION ---
-          $server = "LIN-5CG3083JMK"  # e.g. "localhost\\SQLEXPRESS"
-          $database = "SampleDB"
-          $scriptsPath = "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql"
-
-          # --- STEP 1: Create database if not exists ---
-          Write-Host "Ensuring database exists..."
-          sqlcmd -S $server -d master -E -Q "IF DB_ID(N'$SampleDB') IS NULL CREATE DATABASE [$SampleDB];"
-
-          # --- STEP 2: Run each SQL script in order ---
-          Write-Host "Running SQL scripts..."
-          Get-ChildItem "$scriptsPath" -Filter *.sql | Sort-Object Name | ForEach-Object {
-            Write-Host "Executing script: $($Deploy_SampleData.sql)"
-            sqlcmd -S $LIN-5CG3083JMK -d $SampleDB -E -i $C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql
+          if (-not (Get-Command sqlcmd -ErrorAction SilentlyContinue)) {
+            Write-Host "Installing SQLCMD..."
+            Invoke-WebRequest -Uri "https://aka.ms/sqlcmd-win" -OutFile "sqlcmd.msi"
+            Start-Process msiexec.exe -Wait -ArgumentList '/I sqlcmd.msi /quiet /qn /norestart'
+          } else {
+            Write-Host "SQLCMD already installed."
           }
 
-          Write-Host "Deployment completed successfully."
+      - name: Create new database if not exists
+        shell: pwsh
+        env:
+          DB_SERVER: ${{ secrets.LIN-5CG3083JMK }}
+          DB_NAME: ${{ secrets.SampleDB }}
+          DB_USER: ${{ secrets.test_user }}
+          DB_PASSWORD: ${{ secrets.test }}
+        run: |
+          Write-Host "Checking if database [$env:DB_NAME] exists on [$env:DB_SERVER]..."
+          $query = @"
+          IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'$env:DB_NAME')
+          BEGIN
+            PRINT 'Database does not exist. Creating...';
+            CREATE DATABASE [$env:DB_NAME];
+          END
+          ELSE
+          BEGIN
+            PRINT 'Database already exists. Skipping creation.';
+          END
+          "@
+          sqlcmd -S $env:DB_SERVER -U $env:DB_USER -P $env:DB_PASSWORD -Q "$query"
+
+      - name: Deploy schema scripts
+        shell: pwsh
+        env:
+          DB_SERVER: ${{ secrets.LIN-5CG3083JMK }}
+          DB_NAME: ${{ secrets.SampleDB }}
+          DB_USER: ${{ secrets.test_user }}
+          DB_PASSWORD: ${{ secrets.test }}
+        run: |
+          Write-Host "Deploying schema scripts to [$env:DB_NAME]..."
+          sqlcmd -S $env:DB_SERVER -d $env:DB_NAME -U $env:DB_USER -P $env:DB_PASSWORD -i "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql"
+
+      - name: Seed initial data
+        shell: pwsh
+        env:
+          DB_SERVER: ${{ secrets.LIN-5CG3083JMK }}
+          DB_NAME: ${{ secrets.SampleDB }}
+          DB_USER: ${{ secrets.test_user }}
+          DB_PASSWORD: ${{ secrets.test }}
+        run: |
+          Write-Host "Seeding data into [$env:DB_NAME]..."
+          sqlcmd -S $env:DB_SERVER -d $env:DB_NAME -U $env:DB_USER -P $env:DB_PASSWORD -i "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql"
