@@ -3,11 +3,10 @@ on: [push]
  
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    
       with:        
         connection-string: ${{ secrets.SQL_CONNECTION_STRING }}
-        path: ''$(Build.SourcesDirectory)\sqlserver-deploy-scripts\Deploy_SampleData.sql'
+        path: 'C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql'
         action: 'publish'
