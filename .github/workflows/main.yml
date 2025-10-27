@@ -1,0 +1,39 @@
+name: Deploy SQL Scripts to SQL Server
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Git_Deploy_Test/**.sql'  # triggers only when .sql files change inside sql folder
+  workflow_dispatch:  # allows manual trigger
+
+jobs:
+  deploy-sql:
+    name: Deploy SQL Scripts
+    runs-on: windows-latest
+
+    env:
+      SQL_SERVER: ${{ secrets.LIN-5CG3083JMK }}       # e.g., "myserver.database.windows.net"
+      SQL_USERNAME: ${{ secrets.test_user }}   # SQL user
+      SQL_PASSWORD: ${{ secrets.test }}   # SQL password
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SQLCMD path
+        run: |
+          echo "Checking for SQLCMD..."
+          sqlcmd -? || choco install sqlcmd -y
+
+      - name: Verify SQL connection
+        run: |
+          echo "Testing SQL Server connection..."
+          sqlcmd -S $env:SQL_SERVER -d $env:SQL_DATABASE -U $env:SQL_USERNAME -P $env:SQL_PASSWORD -Q "SELECT GETDATE() AS CurrentTime"
+
+      - name: Deploy SQL scripts
+        run: |
+          echo "Deploying SQL scripts..."
+          sqlcmd -S $env:SQL_SERVER -d $env:SQL_DATABASE -U $env:SQL_USERNAME -P $env:SQL_PASSWORD -i "$($file.FullName)"
+          }
