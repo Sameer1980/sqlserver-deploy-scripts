@@ -1,0 +1,26 @@
+name: Deploy SQL View (Windows)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_View.sql'   # Only trigger when this file changes
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy SQL View
+        env:
+          DB_SERVER: ${{ secrets.LIN-5CG3083JMK }}
+          DB_NAME: ${{ secrets.schooldb }}
+          DB_USER: ${{ secrets.test_user }}
+          DB_PASSWORD: ${{ secrets.test }}
+        run: |
+          Write-Host "Deploying SQL View..."
+          sqlcmd -S "$env:DB_SERVER" -d "$env:DB_NAME" -U "$env:DB_USER" -P "$env:DB_PASSWORD" -i "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_View.sql"
