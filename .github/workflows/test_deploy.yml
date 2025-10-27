@@ -9,5 +9,5 @@ jobs:
     
       with:        
         connection-string: ${{ secrets.SQL_CONNECTION_STRING }}
-        path: 'C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql'
+        path: ''$(Build.SourcesDirectory)\sqlserver-deploy-scripts\Deploy_SampleData.sql'
         action: 'publish'
