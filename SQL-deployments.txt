@@ -1,0 +1,58 @@
+You’ll need:
+
+1.A GitHub repository containing your .sql scripts.
+
+2.Access to a SQL Server instance (on-premises or Azure SQL).
+
+3.A deployment method — e.g. sqlcmd, PowerShell, or Azure CLI.
+
+4.Optionally, GitHub Actions to automate the deployment.
+
+############################################################################################
+
+Option 1: Manual Deployment via GitHub + SQLCMD
+
+This is the simplest approach.
+
+Push your SQL script to your GitHub repo (e.g., scripts/deploy.sql).
+
+On your local machine or a CI runner, clone the repo:
+
+git clone https://github.com/<user>/<repo>.git
+cd <repo>/scripts
+
+Example : git clone https://github.com/Sameer1980/sqlserver-deploy-scripts.git
+
+cd C:\Git_Deploy_Test\sqlserver-deploy-scripts
+
+#############################################################################################
+
+
+Run the script using sqlcmd:(in case of SQL Server authentication)
+
+sqlcmd -S your_server.database.windows.net -U your_user -P your_password -d your_database -i deploy.sql
+Example -> 
+sqlcmd -S LIN-5CG3083JMK -U test_user -P test -i "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql"
+
+
+(in case of Windows authentication)Example ->
+
+-S → Server name (and instance, if applicable).
+Example: localhost, MYPC\SQLEXPRESS, or 192.168.1.10.
+
+-d → Database name (optional; you can also USE MyDatabase inside the script).
+
+-E → Use a trusted connection (Windows Authentication).
+
+-i → Input SQL script file.
+
+
+sqlcmd -S LIN-5CG3083JMK -E -i "C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_SampleData.sql"
+
+For checking connectivity to the DB server before doing the above activity.
+sqlcmd -S MYPC\SQLEXPRESS -E -Q "SELECT @@VERSION;"
+Example - sqlcmd -S LIN-5CG3083JMK -E -Q "SELECT @@VERSION;"
+SELECT SERVERPROPERTY('InstanceName');
+
+
+
