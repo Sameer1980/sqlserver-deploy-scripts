@@ -1,0 +1,12 @@
+# .github/workflows/sql-workflow.yml
+on: [push]
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:        
+        connection-string: ${{ secrets.SQL_CONNECTION_STRING }}
+        path: 'C:\Git_Deploy_Test\sqlserver-deploy-scripts\Deploy_View.sql'
+        action: 'publish'
